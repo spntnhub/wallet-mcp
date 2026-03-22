@@ -1,4 +1,3 @@
-
 <p align="center">
 	<img src="https://img.shields.io/npm/v/@spntn/wallet-mcp.svg?style=flat-square" alt="npm version" />
 	<img src="https://img.shields.io/github/license/spntn/wallet-mcp-server?style=flat-square" alt="license" />
@@ -169,6 +168,52 @@ npx ts-node api-server.ts
 - `/api/sim/test` — Sayaç döndüren test endpoint’i
 - `/api/sim/error?type=rate|quota` — Hata simülasyonu
 - `/api/sim/chain` — Tool chaining simülasyonu (POST: `{ steps: [...] }`)
+
+---
+
+## 🔗 Public API Access & Usage
+
+### Live Railway Endpoint
+
+Tüm API endpointlerine Railway’in verdiği domain üzerinden erişebilirsiniz:
+
+```
+https://wallet-mcp-production.up.railway.app/
+```
+
+> Kendi projenizin domainini Railway panelinden bulabilirsiniz.
+
+### Canlı Örnek İstekler
+
+```bash
+# Health check
+curl https://wallet-mcp-production.up.railway.app/
+
+# Bakiye sorgulama (örnek GET)
+curl "https://wallet-mcp-production.up.railway.app/wallet/balance?wallet=0x123...&chain=polygon&token=USDC"
+
+# Tüm zincirlerde bakiye
+curl "https://wallet-mcp-production.up.railway.app/wallet/all-balances?wallet=0x123..."
+
+# Swagger/OpenAPI dokümantasyonu
+https://wallet-mcp-production.up.railway.app/docs
+```
+
+### Postman ile Test
+- Railway domainini kullanarak endpointleri Postman’da test edebilirsiniz.
+- Swagger/OpenAPI dokümantasyonunu Postman’a import edebilirsiniz.
+
+### CORS & AI Agentlar
+- API, AI agentlar ve frontend uygulamalar tarafından doğrudan erişilebilir.
+- CORS policy açık (gerekirse özelleştirilebilir).
+
+---
+
+## 🌍 How to Share & Publish
+
+- Railway domainini veya kendi özel domainini paylaşarak API’yı herkese açabilirsin.
+- Swagger/OpenAPI endpointini geliştiricilere ve AI agentlara dokümantasyon olarak sunabilirsin.
+- API anahtarı veya rate limit eklemek istersen, Express middleware ile kolayca ekleyebilirsin.
 
 ---
 
