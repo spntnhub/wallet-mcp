@@ -1,4 +1,4 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import client from 'prom-client';
 
 // Prometheus usage metric
@@ -14,9 +14,11 @@ export function advancedRateLimit() {
     windowMs: 60 * 1000, // 1 dakika
     max: 30, // 1 dakikada 30 istek
     keyGenerator: (req: any): string => {
-      // API key varsa ona göre, yoksa IP
-      const key = req.headers['x-api-key']?.toString() || req.ip;
-      return key || '';
+      // API key varsa ona göre, yoksa IP (IPv6 uyumlu)
+      if (req.headers['x-api-key']) {
+        return req.headers['x-api-key'].toString();
+      }
+      return ipKeyGenerator(req);
     },
     handler: (req: any, res: any) => {
       res.status(429).json({

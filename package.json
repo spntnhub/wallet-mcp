@@ -8,7 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "heroku-postbuild": "npm run build",
+    "heroku-postbuild": "npm run build && node copy-openapi.js",
     "dev": "ts-node src/index.ts",
     "start": "node dist/api-server.js"
   },
