@@ -89,20 +89,24 @@ Examples:
     async (params: TransferInput) => {
       // Adres validasyonu
       if (!isValidAddress(params.from)) {
-        return aiErrorResponse(
-          "INVALID_SENDER_ADDRESS",
-          `Invalid sender address: ${params.from}`,
-          { from: params.from },
-          "Lütfen 0x ile başlayan geçerli bir gönderen adresi girin."
-        );
+        return {
+          content: [{
+            type: "text",
+            text: `Invalid sender address: ${params.from}`,
+            annotations: undefined,
+            _meta: undefined
+          }],
+        };
       }
       if (!isValidAddress(params.to)) {
-        return aiErrorResponse(
-          "INVALID_RECIPIENT_ADDRESS",
-          `Invalid recipient address: ${params.to}`,
-          { to: params.to },
-          "Lütfen 0x ile başlayan geçerli bir alıcı adresi girin."
-        );
+        return {
+          content: [{
+            type: "text",
+            text: `Invalid recipient address: ${params.to}`,
+            annotations: undefined,
+            _meta: undefined
+          }],
+        };
       }
 
       try {
@@ -162,20 +166,27 @@ Examples:
           };
 
           return {
-            content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+            content: [{
+              type: "text",
+              text: JSON.stringify(result, null, 2),
+              annotations: undefined,
+              _meta: undefined
+            }],
             structuredContent: result,
           };
         }
 
-
         // ERC-20 token transfer
         const { address: tokenAddress, error } = resolveTokenAddress(params.chain, params.token);
-        if (error) {
-          return aiErrorResponse(
-            "TOKEN_NOT_FOUND",
-            error,
-            { chain: params.chain, token: params.token }
-          );
+        if (error || !tokenAddress) {
+          return {
+            content: [{
+              type: "text",
+              text: error || "Token address not found",
+              annotations: undefined,
+              _meta: undefined
+            }],
+          };
         }
 
         const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
@@ -250,16 +261,24 @@ Examples:
         };
 
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{
+            type: "text",
+            text: JSON.stringify(result, null, 2),
+            annotations: undefined,
+            _meta: undefined
+          }],
           structuredContent: result,
         };
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
-        return aiErrorResponse(
-          "TRANSFER_PREPARE_ERROR",
-          `Error preparing transfer: ${message}`,
-          { params }
-        );
+        return {
+          content: [{
+            type: "text",
+            text: `Error preparing transfer: ${message}`,
+            annotations: undefined,
+            _meta: undefined
+          }],
+        };
       }
     }
   );

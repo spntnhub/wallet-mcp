@@ -1,5 +1,8 @@
 
 import { aiErrorResponse } from "./ai-error.js";
+import fs from "fs";
+import path from "path";
+import { Request, Response, NextFunction } from "express";
 
 const CHAINS_PATH = path.resolve(__dirname, "./chains.json");
 

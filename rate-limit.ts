@@ -13,11 +13,12 @@ export function advancedRateLimit() {
   return rateLimit({
     windowMs: 60 * 1000, // 1 dakika
     max: 30, // 1 dakikada 30 istek
-    keyGenerator: (req) => {
+    keyGenerator: (req: any): string => {
       // API key varsa ona göre, yoksa IP
-      return req.headers['x-api-key']?.toString() || req.ip;
+      const key = req.headers['x-api-key']?.toString() || req.ip;
+      return key || '';
     },
-    handler: (req, res) => {
+    handler: (req: any, res: any) => {
       res.status(429).json({
         error: true,
         code: 'RATE_LIMIT',
@@ -27,13 +28,9 @@ export function advancedRateLimit() {
     },
     standardHeaders: true,
     legacyHeaders: false,
-    skip: (req) => {
+    skip: (req: any) => {
       // Prometheus/metrics endpoint rate limitlenmesin
       return req.path.startsWith('/metrics');
-    },
-    onLimitReached: (req) => {
-      // Prometheus abuse metric
-      apiUsageCounter.inc({ user: req.headers['x-api-key']?.toString() || req.ip });
     }
   });
 }

@@ -11,9 +11,14 @@ const openapiSpec = fs.readFileSync(openapiPath, 'utf-8');
 
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(JSON.parse(JSON.stringify(require('js-yaml').load(openapiSpec)))));
 
-// Tool discovery manifest endpoint
-app.get('/api/manifest', manifestEndpoint);
-// Zincir discovery endpoint
-app.get('/api/chains', chainsEndpoint);
+// Dummy manifest endpoint (eksik fonksiyonlar için geçici çözüm)
+import { Request, Response } from "express";
+export function manifestEndpoint(req: Request, res: Response) {
+  res.json({ name: "Wallet MCP Server", version: "1.0.0" });
+}
+
+export function chainsEndpoint(req: Request, res: Response) {
+  res.json({ chains: Object.keys(require('./constants.js').SUPPORTED_CHAINS) });
+}
 
 export default app;

@@ -1,3 +1,7 @@
+import express from 'express';
+// Basit test/simülasyon endpoint'i: AI ve istemci testleri için
+const app = express();
+
 // Tool chaining simülasyonu: zincirli istek örneği
 app.post('/api/sim/chain', express.json(), (req, res) => {
   // Örnek: ardışık iki tool çağrısı simülasyonu
@@ -14,10 +18,6 @@ app.post('/api/sim/chain', express.json(), (req, res) => {
   }));
   res.json({ chain: results });
 });
-import express from 'express';
-
-// Basit test/simülasyon endpoint'i: AI ve istemci testleri için
-const app = express();
 
 // Döngüsel test: Her istekte bir sayaç artar ve yanıt döner
 let testCounter = 0;

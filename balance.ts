@@ -72,24 +72,34 @@ Examples:
     },
     async (params: GetBalanceInput) => {
       if (!isValidAddress(params.wallet)) {
-        return aiErrorResponse(
-          "INVALID_WALLET_ADDRESS",
-          `Invalid wallet address: ${params.wallet}. Must be a valid EVM address starting with 0x.`,
-          { wallet: params.wallet }
-        );
+        return {
+          content: [{
+            type: "text",
+            text: `Invalid wallet address: ${params.wallet}. Must be a valid EVM address starting with 0x.`,
+            annotations: undefined,
+            _meta: undefined
+          }],
+        };
       }
 
       try {
-        const provider = getProvider(params.chain);
-        const chainConfig = getChainConfig(params.chain);
+        const provider = getProvider(params.chain as keyof typeof SUPPORTED_CHAINS);
+        const chainConfig = getChainConfig(params.chain as keyof typeof SUPPORTED_CHAINS);
 
         // Native token balance
         if (!params.token) {
           const cacheKey = `balance:${params.chain}:${params.wallet}:native`;
-          let balanceWei = cache.get(cacheKey);
-          if (balanceWei === undefined) {
+          let balanceWei: bigint;
+          const cached = cache.get(cacheKey);
+          if (cached === undefined) {
             balanceWei = await provider.getBalance(params.wallet);
             cache.set(cacheKey, balanceWei);
+          } else if (typeof cached === "bigint") {
+            balanceWei = cached;
+          } else if (typeof cached === "string" && /^\d+$/.test(cached)) {
+            balanceWei = BigInt(cached);
+          } else {
+            throw new Error("Invalid cached balanceWei type");
           }
           const result = {
             wallet: params.wallet,
@@ -100,63 +110,82 @@ Examples:
             decimals: 18,
           };
           return {
-            content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+            content: [{
+              type: "text",
+              text: JSON.stringify(result, null, 2),
+              annotations: undefined,
+              _meta: undefined
+            }],
             structuredContent: result,
           };
         }
 
-
         // ERC-20 token — resolve address
-        const { address: tokenAddress, error } = resolveTokenAddress(params.chain, params.token);
-        if (error) {
-          return aiErrorResponse(
-            "TOKEN_NOT_FOUND",
-            error,
-            { chain: params.chain, token: params.token }
-          );
+        const { address: tokenAddress, error } = resolveTokenAddress(params.chain as keyof typeof SUPPORTED_CHAINS, params.token);
+        if (error || !tokenAddress) {
+          return {
+            content: [{
+              type: "text",
+              text: error || "Token address not found",
+              annotations: undefined,
+              _meta: undefined
+            }],
+          };
         }
 
         const cacheKey = `balance:${params.chain}:${params.wallet}:${tokenAddress}`;
-        let balance: bigint | undefined = cache.get(cacheKey);
+        let balance: bigint | string | undefined = cache.get(cacheKey);
         let decimals: number, symbol: string;
+        const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
         if (balance === undefined) {
-          const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
           [balance, decimals, symbol] = await Promise.all([
             contract.balanceOf(params.wallet) as Promise<bigint>,
             contract.decimals() as Promise<number>,
             contract.symbol() as Promise<string>,
           ]);
           cache.set(cacheKey, balance);
-        } else {
-          // decimals ve symbol cache'lenmediği için tekrar çekiyoruz
-          const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+        } else if (typeof balance === "bigint") {
           [decimals, symbol] = await Promise.all([
             contract.decimals() as Promise<number>,
             contract.symbol() as Promise<string>,
           ]);
+        } else if (typeof balance === "string" && /^\d+$/.test(balance)) {
+          balance = BigInt(balance);
+          [decimals, symbol] = await Promise.all([
+            contract.decimals() as Promise<number>,
+            contract.symbol() as Promise<string>,
+          ]);
+        } else {
+          throw new Error("Invalid cached balance type");
         }
-
         const result = {
           wallet: params.wallet,
           chain: chainConfig.name,
           token: symbol,
           tokenAddress,
-          balance: formatTokenAmount(balance, decimals, symbol),
-          balanceRaw: balance.toString(),
+          balance: formatTokenAmount(balance as bigint, decimals, symbol),
+          balanceRaw: (balance as bigint).toString(),
           decimals,
         };
-
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+          content: [{
+            type: "text",
+            text: JSON.stringify(result, null, 2),
+            annotations: undefined,
+            _meta: undefined
+          }],
           structuredContent: result,
         };
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
-        return aiErrorResponse(
-          "BALANCE_FETCH_ERROR",
-          `Error fetching balance: ${message}`,
-          { params }
-        );
+        return {
+          content: [{
+            type: "text",
+            text: `Error fetching balance: ${message}`,
+            annotations: undefined,
+            _meta: undefined
+          }],
+        };
       }
     }
   );
@@ -216,9 +245,7 @@ Examples:
         };
       }
 
-      const chains = Object.keys(SUPPORTED_CHAINS) as Array<
-        keyof typeof SUPPORTED_CHAINS
-      >;
+      const chains = Object.keys(SUPPORTED_CHAINS) as Array<keyof typeof SUPPORTED_CHAINS>;
       const results: unknown[] = [];
       const errors: string[] = [];
 
@@ -229,7 +256,10 @@ Examples:
             const chainConfig = getChainConfig(chain);
 
             if (!params.token) {
-              const balanceWei = await provider.getBalance(params.wallet);
+              let balanceWei = await provider.getBalance(params.wallet);
+              if (typeof balanceWei !== "bigint") {
+                balanceWei = BigInt(balanceWei);
+              }
               results.push({
                 chain: chainConfig.name,
                 token: chainConfig.nativeToken,
@@ -250,12 +280,14 @@ Examples:
                 ERC20_ABI,
                 provider
               );
-              const [balance, decimals, symbol] = await Promise.all([
+              let [balance, decimals, symbol] = await Promise.all([
                 contract.balanceOf(params.wallet) as Promise<bigint>,
                 contract.decimals() as Promise<number>,
                 contract.symbol() as Promise<string>,
               ]);
-
+              if (typeof balance !== "bigint") {
+                balance = BigInt(balance);
+              }
               results.push({
                 chain: chainConfig.name,
                 token: symbol,
@@ -265,7 +297,7 @@ Examples:
             }
           } catch (err) {
             const message = err instanceof Error ? err.message : "Unknown";
-            errors.push(`${chain}: ${message}`);
+            errors.push(`${String(chain)}: ${message}`);
           }
         })
       );

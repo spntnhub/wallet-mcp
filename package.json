@@ -12,17 +12,36 @@
     "dev": "ts-node src/index.ts",
     "start": "node dist/api-server.js"
   },
-  "keywords": ["mcp", "wallet", "ethereum", "polygon", "base", "web3", "defi"],
+  "keywords": [
+    "mcp",
+    "wallet",
+    "ethereum",
+    "polygon",
+    "base",
+    "web3",
+    "defi"
+  ],
   "author": "spntn",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "ethers": "^6.0.0",
+    "ioredis": "^5.10.1",
+    "node-cache": "^5.1.2",
+    "prom-client": "^15.1.3",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.19.0",
     "zod": "^3.22.0"
   },
   "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/ioredis": "^4.28.10",
     "@types/node": "^20.0.0",
-    "typescript": "^5.0.0",
-    "ts-node": "^10.9.0"
+    "@types/node-cache": "^4.1.3",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/winston": "^2.4.4",
+    "@types/ws": "^8.18.1",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
   }
 }
