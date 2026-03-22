@@ -5,6 +5,11 @@ import simApp from './sim-server.js';
 
 const app = express();
 
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({ status: 'ok', message: 'wallet-mcp-server alive' });
+});
+
 // API ve dokümantasyon
 app.use(swaggerApp);
 // Prometheus metrikleri
