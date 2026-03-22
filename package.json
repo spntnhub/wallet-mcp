@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "heroku-postbuild": "npm run build",
     "dev": "ts-node src/index.ts",
     "start": "node dist/api-server.js"
   },
