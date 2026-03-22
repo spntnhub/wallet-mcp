@@ -4,17 +4,18 @@
 	<img src="https://img.shields.io/node/v/ts-node?style=flat-square" alt="node version" />
 </p>
 
+
 # @spntn/wallet-mcp
+
 ---
 
 ## 📝 Changelog (v1.1.0)
 
-- AI/UX-first API, tool discovery, chaining, simülasyon endpoint’leri
-- Gelişmiş rate limit, quota, abuse detection, Prometheus metrikleri
-- WebSocket, Redis, admin API, canlı Swagger/OpenAPI
-- Context-rich hata yönetimi, örnek istemci, production güvenlik
+- AI/UX-first API, tool discovery, chaining, simulation endpoints
+- Advanced rate limiting, quota, abuse detection, Prometheus metrics
+- WebSocket, Redis, admin API, live Swagger/OpenAPI
+- Context-rich error handling, sample client, production security
 
----
 ---
 
 ## 🧑‍🔬 Minimum Requirements
@@ -24,27 +25,25 @@
 - Linux/macOS/Windows
 
 ---
----
 
 ## 🧪 Test & Example Usage
 
 ```bash
-# Testleri çalıştır
+# Run tests
 npm test
-# veya
+# or
 npx vitest
 
-# Örnek istemci
+# Sample client
 node client-example.js
 ```
 
 ---
----
 
 ## 🤝 Contributing & Support
 
-- PR ve katkılar için lütfen issue açın veya doğrudan PR gönderin.
-- Sorularınız için GitHub Issues veya [spntn.io](https://spntn.io) üzerinden iletişime geçebilirsiniz.
+- Please open an issue or send a PR for contributions.
+- For questions, use GitHub Issues or contact via [spntn.io](https://spntn.io).
 
 ---
 
@@ -60,10 +59,13 @@ MCP server for EVM wallet operations — balance queries, transfer preparation, 
 | `wallet_get_gas_price` | Get current gas price on any supported chain |
 | `wallet_get_transaction` | Check status and details of any transaction |
 
+
 ## Supported Chains
 
 - **Ethereum Mainnet** (ETH, USDC, USDT, WETH)
 - **Polygon Mainnet** (POL, USDC, USDT, WMATIC)
+- **Base Mainnet**
+
 
 # @spntn/wallet-mcp
 
@@ -71,14 +73,16 @@ MCP server for EVM wallet operations — AI/UX-first, modular, and production-re
 
 ---
 
+
 ## 🗺️ Overview
 
 - **Multi-chain**: Ethereum, Polygon, Base
-- **Modular tools**: Balance, transfer, gas, transaction, token, admin, WebSocket, Prometheus, AI chaining, simülasyon
-- **AI/UX-first**: Doğal dil promptları, AI-friendly hata yönetimi, tool discovery, chaining, örnek istemci
-- **Production features**: Rate limit, quota, Prometheus, Redis, OpenAPI/Swagger, test/simülasyon endpoint’leri
+- **Modular tools**: Balance, transfer, gas, transaction, token, admin, WebSocket, Prometheus, AI chaining, simulation
+- **AI/UX-first**: Natural language prompts, AI-friendly error handling, tool discovery, chaining, sample client
+- **Production features**: Rate limit, quota, Prometheus, Redis, OpenAPI/Swagger, test/simulation endpoints
 
 ---
+
 
 ## 🚀 Quick Start
 
@@ -111,6 +115,7 @@ npx ts-node api-server.ts
 
 ---
 
+
 ## 🧑‍💻 Example Prompts & Chaining
 
 ```text
@@ -123,7 +128,7 @@ npx ts-node api-server.ts
 "Prepare a transfer of 10 USDC to 0x456... on Base"
 // → { "from": "0x...", "to": "0x456...", "amount": "10", "chain": "base", "token": "USDC", ... }
 
-"Send 5 USDC from 0xA to 0xB on Polygon, ardından bakiyemi kontrol et."
+"Send 5 USDC from 0xA to 0xB on Polygon, then check my balance."
 // → [ { "step": "prepare_transfer", ... }, { "step": "get_balance", ... } ]
 
 "Send 1000 BTC to 0xC on Polygon"
@@ -132,16 +137,18 @@ npx ts-node api-server.ts
 
 ---
 
+
 ## 🛡️ Security & Production
 
 - **No private keys**: Only unsigned tx, user signs
-- **Rate limit & quota**: API key veya IP bazlı, Prometheus ile izlenebilir
-- **Test/simülasyon**: /api/sim/* endpoint’leri ile AI ve istemci testleri
-- **OpenAPI/Swagger**: Canlı dokümantasyon `/docs`
-- **Prometheus**: `/metrics` ile API usage, abuse, quota metrikleri
-- **WebSocket**: Gerçek zamanlı zincir ve tx event’leri
+- **Rate limit & quota**: API key or IP-based, Prometheus monitoring
+- **Test/simulation**: /api/sim/* endpoints for AI and client testing
+- **OpenAPI/Swagger**: Live documentation `/docs`
+- **Prometheus**: `/metrics` for API usage, abuse, quota metrics
+- **WebSocket**: Real-time chain and tx events
 
 ---
+
 
 ## ⚙️ Configuration
 
@@ -151,69 +158,72 @@ npx ts-node api-server.ts
 | `POLYGON_RPC_URL` | ❌ | Custom Polygon RPC (default: llamarpc) |
 | `ETH_RPC_URL` | ❌ | Custom Ethereum RPC (default: llamarpc) |
 | `BASE_RPC_URL` | ❌ | Custom Base RPC (default: mainnet.base.org) |
-| `ADMIN_API_KEY` | ❌ | Admin endpoints için API key |
-| `REDIS_URL` | ❌ | Redis cache için bağlantı |
+| `ADMIN_API_KEY` | ❌ | API key for admin endpoints |
+| `REDIS_URL` | ❌ | Redis cache connection |
 
 ---
+
 
 ## 📖 OpenAPI/Swagger
 
-- Canlı dokümantasyon: [http://localhost:3000/docs](http://localhost:3000/docs)
-- OpenAPI dosyası: `openapi.yaml`
+- Live documentation: [http://localhost:8080/docs](http://localhost:8080/docs)
+- OpenAPI file: `openapi.yaml`
 
 ---
 
-## 🧪 Test & Simülasyon
 
-- `/api/sim/test` — Sayaç döndüren test endpoint’i
-- `/api/sim/error?type=rate|quota` — Hata simülasyonu
-- `/api/sim/chain` — Tool chaining simülasyonu (POST: `{ steps: [...] }`)
+## 🧪 Test & Simulation
+
+- `/api/sim/test` — Counter test endpoint
+- `/api/sim/error?type=rate|quota` — Error simulation
+- `/api/sim/chain` — Tool chaining simulation (POST: `{ steps: [...] }`)
 
 ---
+
 
 ## 🔗 Public API Access & Usage
 
 ### Live Railway Endpoint
 
-Tüm API endpointlerine Railway’in verdiği domain üzerinden erişebilirsiniz:
+All API endpoints are accessible via the Railway-provided domain:
 
 ```
-https://wallet-mcp-production.up.railway.app/
+https://spntnwallet-mcp-production.up.railway.app/
 ```
 
-> Kendi projenizin domainini Railway panelinden bulabilirsiniz.
+> You can find your project’s domain in the Railway dashboard.
 
-### Canlı Örnek İstekler
+### Live Example Requests
 
 ```bash
 # Health check
-curl https://wallet-mcp-production.up.railway.app/
+curl https://spntnwallet-mcp-production.up.railway.app/
 
-# Bakiye sorgulama (örnek GET)
-curl "https://wallet-mcp-production.up.railway.app/wallet/balance?wallet=0x123...&chain=polygon&token=USDC"
+# Balance query (example GET)
+curl "https://spntnwallet-mcp-production.up.railway.app/wallet/balance?wallet=0x123...&chain=polygon&token=USDC"
 
-# Tüm zincirlerde bakiye
-curl "https://wallet-mcp-production.up.railway.app/wallet/all-balances?wallet=0x123..."
+# All balances across chains
+curl "https://spntnwallet-mcp-production.up.railway.app/wallet/all-balances?wallet=0x123..."
 
-# Swagger/OpenAPI dokümantasyonu
-https://wallet-mcp-production.up.railway.app/docs
+# Swagger/OpenAPI documentation
+https://spntnwallet-mcp-production.up.railway.app/docs
 ```
 
-### Postman ile Test
-- Railway domainini kullanarak endpointleri Postman’da test edebilirsiniz.
-- Swagger/OpenAPI dokümantasyonunu Postman’a import edebilirsiniz.
+### Postman Testing
+- You can test endpoints in Postman using the Railway domain.
+- Import the Swagger/OpenAPI documentation into Postman for easy testing.
 
-### CORS & AI Agentlar
-- API, AI agentlar ve frontend uygulamalar tarafından doğrudan erişilebilir.
-- CORS policy açık (gerekirse özelleştirilebilir).
+### CORS & AI Agents
+- The API is accessible by AI agents and frontend applications directly.
+- CORS policy is open (can be customized if needed).
 
 ---
 
 ## 🌍 How to Share & Publish
 
-- Railway domainini veya kendi özel domainini paylaşarak API’yı herkese açabilirsin.
-- Swagger/OpenAPI endpointini geliştiricilere ve AI agentlara dokümantasyon olarak sunabilirsin.
-- API anahtarı veya rate limit eklemek istersen, Express middleware ile kolayca ekleyebilirsin.
+- Share your Railway domain or custom domain to make the API public.
+- Provide the Swagger/OpenAPI endpoint as documentation for developers and AI agents.
+- If you want to add API keys or rate limiting, you can easily do so with Express middleware.
 
 ---
 
