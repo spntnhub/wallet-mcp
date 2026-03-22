@@ -1,0 +1,31 @@
+<!-- Basit AI arayüzü örneği (HTML+JS, fetch ile) -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wallet MCP AI Demo</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    input, button { font-size: 1em; }
+    pre { background: #f4f4f4; padding: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Wallet MCP AI Demo</h1>
+  <button onclick="getChains()">Zincirleri Listele</button>
+  <button onclick="getMetrics()">API Metriklerini Göster</button>
+  <pre id="output"></pre>
+  <script>
+    async function getChains() {
+      const res = await fetch('/api/chains');
+      const data = await res.json();
+      document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+    }
+    async function getMetrics() {
+      const res = await fetch('/metrics');
+      const text = await res.text();
+      document.getElementById('output').textContent = text;
+    }
+  </script>
+</body>
+</html>

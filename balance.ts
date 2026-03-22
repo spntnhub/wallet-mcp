@@ -8,6 +8,9 @@ import {
   isValidAddress,
   formatTokenAmount,
 } from "./chain.js";
+import cache from "./cache.js";
+import { resolveTokenAddress } from "./token-utils.js";
+import { aiErrorResponse } from "./ai-error.js";
 import { ERC20_ABI, SUPPORTED_CHAINS } from "./constants.js";
 
 const GetBalanceSchema = z.object({
@@ -53,8 +56,11 @@ Returns:
   }
 
 Examples:
-  - "What is my POL balance?" → chain: polygon, no token
-  - "Check USDC balance on Base" → chain: base, token: USDC
+  - "What is my POL balance?" → { "wallet": "0x...", "chain": "polygon" }
+  - "Check USDC balance on Base" → { "wallet": "0x...", "chain": "base", "token": "USDC" }
+  - "Show all my balances across all chains" → { "wallet": "0x..." }
+  - "AI chaining: Send 5 USDC from 0xA to 0xB on Polygon, ardından bakiyemi kontrol et." → [ { "step": "prepare_transfer", ... }, { "step": "get_balance", ... } ]
+  - Hatalı prompt: "Check BTC balance on Polygon" → { "error": "TOKEN_NOT_FOUND", ... }
   - "ETH balance on mainnet" → chain: ethereum, no token`,
       inputSchema: GetBalanceSchema,
       annotations: {
@@ -66,14 +72,11 @@ Examples:
     },
     async (params: GetBalanceInput) => {
       if (!isValidAddress(params.wallet)) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error: Invalid wallet address "${params.wallet}". Must be a valid EVM address starting with 0x.`,
-            },
-          ],
-        };
+        return aiErrorResponse(
+          "INVALID_WALLET_ADDRESS",
+          `Invalid wallet address: ${params.wallet}. Must be a valid EVM address starting with 0x.`,
+          { wallet: params.wallet }
+        );
       }
 
       try {
@@ -82,7 +85,12 @@ Examples:
 
         // Native token balance
         if (!params.token) {
-          const balanceWei = await provider.getBalance(params.wallet);
+          const cacheKey = `balance:${params.chain}:${params.wallet}:native`;
+          let balanceWei = cache.get(cacheKey);
+          if (balanceWei === undefined) {
+            balanceWei = await provider.getBalance(params.wallet);
+            cache.set(cacheKey, balanceWei);
+          }
           const result = {
             wallet: params.wallet,
             chain: chainConfig.name,
@@ -97,33 +105,36 @@ Examples:
           };
         }
 
-        // ERC-20 token — resolve address
-        let tokenAddress: string;
-        const chainTokens = chainConfig.tokens as Record<string, string>;
 
-        if (params.token.startsWith("0x")) {
-          tokenAddress = params.token;
-        } else {
-          const upperToken = params.token.toUpperCase();
-          if (!chainTokens[upperToken]) {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Error: Token "${params.token}" not found on ${chainConfig.name}. Use a contract address or one of: ${Object.keys(chainTokens).join(", ")}`,
-                },
-              ],
-            };
-          }
-          tokenAddress = chainTokens[upperToken];
+        // ERC-20 token — resolve address
+        const { address: tokenAddress, error } = resolveTokenAddress(params.chain, params.token);
+        if (error) {
+          return aiErrorResponse(
+            "TOKEN_NOT_FOUND",
+            error,
+            { chain: params.chain, token: params.token }
+          );
         }
 
-        const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
-        const [balance, decimals, symbol] = await Promise.all([
-          contract.balanceOf(params.wallet) as Promise<bigint>,
-          contract.decimals() as Promise<number>,
-          contract.symbol() as Promise<string>,
-        ]);
+        const cacheKey = `balance:${params.chain}:${params.wallet}:${tokenAddress}`;
+        let balance: bigint | undefined = cache.get(cacheKey);
+        let decimals: number, symbol: string;
+        if (balance === undefined) {
+          const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+          [balance, decimals, symbol] = await Promise.all([
+            contract.balanceOf(params.wallet) as Promise<bigint>,
+            contract.decimals() as Promise<number>,
+            contract.symbol() as Promise<string>,
+          ]);
+          cache.set(cacheKey, balance);
+        } else {
+          // decimals ve symbol cache'lenmediği için tekrar çekiyoruz
+          const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+          [decimals, symbol] = await Promise.all([
+            contract.decimals() as Promise<number>,
+            contract.symbol() as Promise<string>,
+          ]);
+        }
 
         const result = {
           wallet: params.wallet,
@@ -141,14 +152,11 @@ Examples:
         };
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error fetching balance: ${message}. Check that the RPC is available and the address is correct.`,
-            },
-          ],
-        };
+        return aiErrorResponse(
+          "BALANCE_FETCH_ERROR",
+          `Error fetching balance: ${message}`,
+          { params }
+        );
       }
     }
   );

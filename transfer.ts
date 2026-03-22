@@ -10,6 +10,8 @@ import {
   calculateFee,
 } from "./chain.js";
 import { ERC20_ABI, FEE_CONFIG } from "./constants.js";
+import { resolveTokenAddress } from "./token-utils.js";
+import { aiErrorResponse } from "./ai-error.js";
 
 const TransferSchema = z.object({
   from: z.string().describe("Sender wallet address (0x...)"),
@@ -71,8 +73,11 @@ Returns:
   }
 
 Examples:
-  - "Send 5 POL to 0x123..." → chain: polygon, no token, amount: "5"
-  - "Transfer 100 USDC on Base" → chain: base, token: USDC, amount: "100"`,
+  - "Send 5 POL to 0x123..." → { "from": "0x...", "to": "0x123...", "amount": "5", "chain": "polygon" }
+  - "Transfer 100 USDC on Base" → { "from": "0x...", "to": "0x...", "amount": "100", "chain": "base", "token": "USDC" }
+  - "AI chaining: Send 5 USDC from 0xA to 0xB on Polygon, ardından bakiyemi kontrol et." → [ { "step": "prepare_transfer", ... }, { "step": "get_balance", ... } ]
+  - Hatalı prompt: "Send 1000 BTC to 0xC on Polygon" → { "error": "TOKEN_NOT_FOUND", ... }
+`,
       inputSchema: TransferSchema,
       annotations: {
         readOnlyHint: false,
@@ -84,24 +89,20 @@ Examples:
     async (params: TransferInput) => {
       // Adres validasyonu
       if (!isValidAddress(params.from)) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error: Invalid sender address "${params.from}"`,
-            },
-          ],
-        };
+        return aiErrorResponse(
+          "INVALID_SENDER_ADDRESS",
+          `Invalid sender address: ${params.from}`,
+          { from: params.from },
+          "Lütfen 0x ile başlayan geçerli bir gönderen adresi girin."
+        );
       }
       if (!isValidAddress(params.to)) {
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error: Invalid recipient address "${params.to}"`,
-            },
-          ],
-        };
+        return aiErrorResponse(
+          "INVALID_RECIPIENT_ADDRESS",
+          `Invalid recipient address: ${params.to}`,
+          { to: params.to },
+          "Lütfen 0x ile başlayan geçerli bir alıcı adresi girin."
+        );
       }
 
       try {
@@ -166,25 +167,15 @@ Examples:
           };
         }
 
-        // ERC-20 token transfer
-        const chainTokens = chainConfig.tokens as Record<string, string>;
-        let tokenAddress: string;
 
-        if (params.token.startsWith("0x")) {
-          tokenAddress = params.token;
-        } else {
-          const upperToken = params.token.toUpperCase();
-          if (!chainTokens[upperToken]) {
-            return {
-              content: [
-                {
-                  type: "text",
-                  text: `Error: Token "${params.token}" not found on ${chainConfig.name}. Available: ${Object.keys(chainTokens).join(", ")}`,
-                },
-              ],
-            };
-          }
-          tokenAddress = chainTokens[upperToken];
+        // ERC-20 token transfer
+        const { address: tokenAddress, error } = resolveTokenAddress(params.chain, params.token);
+        if (error) {
+          return aiErrorResponse(
+            "TOKEN_NOT_FOUND",
+            error,
+            { chain: params.chain, token: params.token }
+          );
         }
 
         const contract = new ethers.Contract(tokenAddress, ERC20_ABI, provider);
@@ -264,14 +255,11 @@ Examples:
         };
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
-        return {
-          content: [
-            {
-              type: "text",
-              text: `Error preparing transfer: ${message}`,
-            },
-          ],
-        };
+        return aiErrorResponse(
+          "TRANSFER_PREPARE_ERROR",
+          `Error preparing transfer: ${message}`,
+          { params }
+        );
       }
     }
   );

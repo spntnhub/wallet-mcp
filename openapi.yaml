@@ -1,0 +1,198 @@
+openapi: 3.0.3
+info:
+  title: Wallet MCP Server API
+  version: 1.0.0
+  description: |
+    MCP server for EVM wallet operations — balance queries, transfer preparation, gas estimation, and transaction tracking across Ethereum, Polygon, and Base.
+servers:
+  - url: http://localhost:3000
+paths:
+  /wallet/balance:
+    post:
+      summary: Get Wallet Balance
+      description: Get the token balance of any EVM wallet address on Ethereum, Polygon, or Base.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wallet:
+                  type: string
+                  description: EVM wallet address (0x...)
+                chain:
+                  type: string
+                  enum: [ethereum, polygon, base]
+                  default: polygon
+                token:
+                  type: string
+                  description: Token symbol (USDC, USDT, WETH etc.) or ERC-20 contract address. Leave empty for native token (ETH/POL)
+      responses:
+        '200':
+          description: Balance result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  wallet:
+                    type: string
+                  chain:
+                    type: string
+                  token:
+                    type: string
+                  balance:
+                    type: string
+                  balanceRaw:
+                    type: string
+                  decimals:
+                    type: integer
+  /wallet/transfer:
+    post:
+      summary: Prepare Token Transfer
+      description: Prepare a token transfer transaction. Returns unsigned transaction data for user to sign and broadcast.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                from:
+                  type: string
+                to:
+                  type: string
+                amount:
+                  type: string
+                chain:
+                  type: string
+                  enum: [ethereum, polygon, base]
+                  default: polygon
+                token:
+                  type: string
+                  description: Token symbol or contract address. Empty = native token.
+      responses:
+        '200':
+          description: Transfer preparation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chain:
+                    type: string
+                  token:
+                    type: string
+                  from:
+                    type: string
+                  to:
+                    type: string
+                  amount:
+                    type: string
+                  fee:
+                    type: object
+                    properties:
+                      amount:
+                        type: string
+                      recipient:
+                        type: string
+                      bps:
+                        type: integer
+                  transactions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        step:
+                          type: integer
+                        description:
+                          type: string
+                        to:
+                          type: string
+                        data:
+                          type: string
+                        value:
+                          type: string
+                        gasEstimate:
+                          type: string
+                  instructions:
+                    type: string
+  /wallet/gas:
+    post:
+      summary: Get Current Gas Price
+      description: Get the current gas price on a blockchain network.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                chain:
+                  type: string
+                  enum: [ethereum, polygon, base]
+                  default: polygon
+      responses:
+        '200':
+          description: Gas price result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  chain:
+                    type: string
+                  gasPriceGwei:
+                    type: string
+                  gasPriceWei:
+                    type: string
+                  estimatedTransferCost:
+                    type: string
+                  baseFeeGwei:
+                    type: string
+  /wallet/transaction:
+    post:
+      summary: Get Transaction Status
+      description: Check the status and details of a blockchain transaction.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                txHash:
+                  type: string
+                chain:
+                  type: string
+                  enum: [ethereum, polygon, base]
+                  default: polygon
+      responses:
+        '200':
+          description: Transaction status result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  txHash:
+                    type: string
+                  chain:
+                    type: string
+                  status:
+                    type: string
+                  blockNumber:
+                    type: integer
+                  confirmations:
+                    type: integer
+                  from:
+                    type: string
+                  to:
+                    type: string
+                  value:
+                    type: string
+                  gasUsed:
+                    type: string
+                  explorerUrl:
+                    type: string

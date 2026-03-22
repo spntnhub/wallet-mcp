@@ -1,0 +1,33 @@
+{
+  "ethereum": {
+    "name": "Ethereum Mainnet",
+    "chainId": 1,
+    "rpcUrl": "https://eth.llamarpc.com",
+    "nativeToken": "ETH",
+    "explorerUrl": "https://etherscan.io",
+    "logo": "https://cryptologos.cc/logos/ethereum-eth-logo.png",
+    "website": "https://ethereum.org/",
+    "description": "The original smart contract blockchain.",
+    "tokens": {
+      "USDC": {
+        "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "logo": "https://cryptologos.cc/logos/usd-coin-usdc-logo.png",
+        "website": "https://www.centre.io/usdc",
+        "description": "USD Coin (USDC) is a fully-backed stablecoin."
+      },
+      "USDT": {
+        "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "logo": "https://cryptologos.cc/logos/tether-usdt-logo.png",
+        "website": "https://tether.to/",
+        "description": "Tether (USDT) is a stablecoin pegged to the US Dollar."
+      },
+      "WETH": {
+        "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        "logo": "https://cryptologos.cc/logos/wrapped-ethereum-weth-logo.png",
+        "website": "https://weth.io/",
+        "description": "Wrapped Ether (WETH) is the ERC-20 compatible version of ETH."
+      }
+    }
+  }
+  // ... diğer zincirler aynı şekilde zengin metadata ile güncellenebilir
+}
